@@ -24,26 +24,25 @@ ui <- fluidPage (
         card(
           card_header("File input"),
           fileInput("file", label = NULL),
-          submitButton("Submit"),
-          actionButton("Cancel" ,label="Cancel")
+          actionButton("upload", label="upload")
             ),
         card(
           radioButtons(
             "radio",
             "Select option",
             choices = list("ACT Data" = 1, "PreACT Data" = 2, "PreACT 8/9 Data" = 3, "PreSAT Data" = 4),
-            selected = 1
-             )
-           ),
-    
+            selected = 1)
+        ),
     ),
+    mainPanel(
     tableOutput(
-      "contents"
-      )
-    
+      "contents"),
+    uiOutput("column_select_ui"),
+    uiOutput("database_column_select_ui")
+    )
   ),
+  )
 
-)
 
 
 # Define server logic ----
@@ -53,23 +52,47 @@ server <- function(input, output) {
     req(input$file)
     df <- read.csv(input$file$datapath, stringsAsFactors = FALSE)
   })
-    
     # Render data preview table
   output$contents <- renderTable({
     req(selected_file_data())
     head(selected_file_data(), 10) # Display first 10 rows
+  })
+
+  #Will upload the data to the server, at some point
+   {v <- reactiveValues(data = NULL)
+    observeEvent(input$submit, {
+      v$data <- submit(100)
+    })}
+
+    #CODE FOR THE RADIO BUTTON
+  observeEvent(input$radio, {
+    if(input$radio ==1 ) {
+      output$database_column_select_ui <- renderUI({
+        selectInput("database_column","Select Database Column:", choices = db_ACT)
+        })}
+    if(input$radio == 2) {
+      output$database_column_select_ui <- renderUI({
+        selectInput("database_column","Select Database Column:", choices = db_PreACT)
+        })}
+    if(input$radio == 3) {
+      output$database_column_select_ui <- renderUI({
+        selectInput("database_column","Select Database Column:", choices = db_PreACT89)
+        })}
+    else{
+      output$database_column_select_ui <- renderUI({
+        selectInput("database_column", "Select Database Column:", choices = db_PreSAT)
+        })}
     })
-  #GOAL - make these selections classify the data under the correct test type
-    #switch(input$radio,
-           #"1" = df[, db_ACT, drop = FALSE],      # ACT Data
-           #"2" = df[, db_PreACT, drop = FALSE],   # PreACT Data
-           #"3" = df[, db_PreACT89, drop = FALSE], # PreACT 8/9 Data
-           #"4" = df[, db_PreSAT, drop = FALSE]    # PreSAT Data
-    #)
-  
-  
-  
-  
+  #READ THE UPLOADED FILE AND EXTRACT COLUMN NAMES
+  #THEN, IN THE SAME EVENT, GENERATE A SELECTINPUT WIDGET FOR THE UPLOAD FILE SELECTION
+  {
+    observeEvent(input$file, {req(input$file)
+      df <- read.csv(input$file$datapath, stringsAsFactors = FALSE)
+      columnnames <- colnames(df)
+      output$column_select_ui <- renderUI({
+      selectInput("column_names", label = "Select Your Columns", choices = columnnames)})
+  })
+  }
 }
 
 # Run the app ----
