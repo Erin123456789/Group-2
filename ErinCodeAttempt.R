@@ -4,7 +4,10 @@ library(DBI)
 library(shiny)
 library(bslib)
 
-db <- dbConnect(RMariaDB::MariaDB(), user='root', password='MarianHighSchool402$)@', dbname='marian', host='34.135.251.192')
+db <- dbConnect(RMariaDB::MariaDB(), 
+                user='root', 
+                password='MarianHighSchool402$)@', 
+                dbname='marian', host='34.135.251.192')
 
 #create a list of the column names
 database_columns <- dbGetQuery(db, "DESCRIBE marian.ACT")
@@ -24,7 +27,7 @@ ui <- fluidPage (
         card(
           card_header("File input"),
           fileInput("file", label = NULL),
-          actionButton("upload", label="upload")
+          actionButton("upload", label="Upload")
             ),
         card(
           radioButtons(
@@ -59,21 +62,33 @@ server <- function(input, output) {
   })
 
   #Will upload the data to the server, at some point
-   {v <- reactiveValues(data = NULL)
+  {v <- reactiveValues(data = NULL)
     observeEvent(input$submit, {
       v$data <- submit(100)
     })}
-
-    #CODE FOR THE RADIO BUTTON
+  
+  #CODE FOR THE RADIO BUTTON
   observeEvent(input$radio, {
-    if(input$radio ==1 ) {
+    if(input$radio == 1 ) {
       output$database_column_select_ui <- renderUI({
         selectInput("database_column","Select Database Column:", choices = db_ACT)
-        })}
+          ACT <- c("student_id","test_date","district","score","new_pred_act")
+        columnnames <- colnames(ACT)
+        output$column <- renderUI({
+          selectInput("columnnames", label = "Select Database Column:", choices = columnnames)
+        })
+      })
+    }
     if(input$radio == 2) {
       output$database_column_select_ui <- renderUI({
         selectInput("database_column","Select Database Column:", choices = db_PreACT)
-        })}
+        PreACT <- c("student_id","test_date","district","score","new_pred","pred_act")
+        columnnames <- colnames(PreACT)
+        output$column <- renderUI({
+          selectInput("columnnames", label = "Select Database Column:", choices = columnnames)
+        })
+      })
+      }
     if(input$radio == 3) {
       output$database_column_select_ui <- renderUI({
         selectInput("database_column","Select Database Column:", choices = db_PreACT89)
@@ -83,8 +98,9 @@ server <- function(input, output) {
         selectInput("database_column", "Select Database Column:", choices = db_PreSAT)
         })}
     })
-  #READ THE UPLOADED FILE AND EXTRACT COLUMN NAMES
-  #THEN, IN THE SAME EVENT, GENERATE A SELECTINPUT WIDGET FOR THE UPLOAD FILE SELECTION
+  
+  #READ THE SELECTED FILE AND EXTRACT COLUMN NAMES
+  #THEN, IN THE SAME EVENT, GENERATE A SELECT INPUT WIDGET FOR THE UPLOAD FILE SELECTION
   {
     observeEvent(input$file, {req(input$file)
       df <- read.csv(input$file$datapath, stringsAsFactors = FALSE)
@@ -93,7 +109,23 @@ server <- function(input, output) {
       selectInput("column_names", label = "Select Your Columns", choices = columnnames)})
   })
   }
-}
+  
+  #UPLOAD DATA INTO THE DATABASE
+  {
+    insert_data <- function(data, db) {
+      dbWriteTable(db, "your_table", data, append = TRUE)
+    }
+    observeEvent(input$upload, {
+      if(!is.null(input$file)) {
+        df <- read.csv(input$file$datapath, stringsAsFactors = FALSE)
+        insert_data(df,db)
+        output$upload_status <- renderText ({
+          "Data Uploaded Successfully!"})
+      }
+        })
+      }
+    }
+  
 
 # Run the app ----
 shinyApp(ui = ui, server = server)
