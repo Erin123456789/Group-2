@@ -1,0 +1,4 @@
+student_id,test_date,district,score,pred_pre,pred_act
+1,2004-01-01,A,20,20,20
+2,2004-01-01,B,30,30,30
+3,2004-01-01,C,36,36,36
