@@ -27,7 +27,7 @@ ui <- fluidPage(
     sidebarPanel(
       fileInput("file", label = "Select CSV file", 
                 accept = ".csv"),
-      radioButtons("radio", "Select Option",
+      radioButtons("radio", "Select Exam",
                    choices = list("ACT Data" = "ACT", "PreACT Data" = "PreACT", "PreACT 8/9 Data" = "PreACT89", "PreSAT Data" = "PreSAT"),
                    selected = "ACT"),
       uiOutput("column_match_ui"),
@@ -84,7 +84,9 @@ server <- function(input, output) {
     do.call(tagList, lapply(db_cols, function(col) {
       fluidRow(
         column(4, strong(col)),
-        column(8, selectInput(paste0("match_", col), NULL, choices = df_cols, selected = df_cols[df_cols == col]))
+        column(8, selectInput(paste0("match_", col), NULL, 
+                  choices = c("SELECT COLUMN", df_cols), 
+                  selected = df_cols[df_cols == col]))
       )
     }))
   })
@@ -95,6 +97,13 @@ server <- function(input, output) {
     
     # Map CSV columns to database columns
     mappings <- sapply(db_columns[[input$radio]], function(col) input[[paste0("match_", col)]])
+    
+    # Check if any field is still "SELECT COLUMN"
+    if ("SELECT COLUMN" %in% mappings) {
+      showNotification("Please make sure all columns are selected.", type = "error", duration = 5)
+      return()
+    }
+    
     data_to_upload <- data_to_upload[, mappings, drop = FALSE]
     names(data_to_upload) <- db_columns[[input$radio]]
     
