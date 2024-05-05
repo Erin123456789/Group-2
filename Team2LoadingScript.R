@@ -28,12 +28,13 @@ ui <- fluidPage(
       card(
         card_header("Select CSV File"),
         fileInput("file", label = NULL),
-        actionButton("upload", label="Update")
       ),
+      div(style = "height: 20px; background-color: white;"),
       card(
         radioButtons("radio", "Select Option",
                      choices = list("ACT Data" = "ACT", "PreACT Data" = "PreACT", "PreACT 8/9 Data" = "PreACT89", "PreSAT Data" = "PreSAT"),
-                     selected = "ACT")
+                     selected = "ACT"),
+        actionButton("upload", label="Update")
       )
     ),
     mainPanel(
