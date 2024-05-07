@@ -85,7 +85,7 @@ server <- function(input, output) {
       fluidRow(
         column(4, strong(col)),
         column(8, selectInput(paste0("match_", col), NULL, 
-                  choices = c("SELECT COLUMN", df_cols), 
+                  choices = c("-----", df_cols), 
                   selected = df_cols[df_cols == col]))
       )
     }))
@@ -98,8 +98,8 @@ server <- function(input, output) {
     # Map CSV columns to database columns
     mappings <- sapply(db_columns[[input$radio]], function(col) input[[paste0("match_", col)]])
     
-    # Check if any field is still "SELECT COLUMN"
-    if ("SELECT COLUMN" %in% mappings) {
+    # Check if any field is still "-----"
+    if ("-----" %in% mappings) {
       showNotification("Please make sure all columns are selected.", type = "error", duration = 5)
       return()
     }
